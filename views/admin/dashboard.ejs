@@ -1,0 +1,181 @@
+<!-- views/admin/dashboard.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    .user-info {
+      font-size: 14px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    h1 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+      margin-right: 5px;
+    }
+    .btn-primary {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .btn-secondary {
+      background-color: #2196F3;
+      color: white;
+    }
+    .btn-danger {
+      background-color: #f44336;
+      color: white;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn-add {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    .admin-badge {
+      background-color: #ff9800;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin Dashboard</h1>
+    <div class="actions">
+      <div class="user-info">
+        Logged in as: <strong><%= username %></strong>
+      </div>
+      <a href="/logout" class="btn btn-secondary">Logout</a>
+    </div>
+  </header>
+  
+  <a href="/admin/users/create" class="btn btn-primary btn-add">Add New User</a>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Admin</th>
+        <th>Sign-up Date</th>
+        <th>Last Login</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (users && users.length > 0) { %>
+        <% users.forEach(user => { %>
+          <tr>
+            <td><%= user.id %></td>
+            <td><%= user.username %></td>
+            <td><%= user.email %></td>
+            <td><%= user.is_admin ? 'Yes' : 'No' %></td>
+            <td><%= user.formatted_signup %></td>
+            <td><%= user.formatted_last_login %></td>
+            <td>
+              <a href="/admin/users/edit/<%= user.id %>" class="btn btn-secondary">Edit</a>
+              <button 
+                class="btn btn-danger delete-user" 
+                data-id="<%= user.id %>"
+                <%= user.id === userId ? 'disabled' : '' %>
+              >Delete</button>
+            </td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr>
+          <td colspan="7" style="text-align: center;">No users found</td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+
+  <script>
+    // Delete user functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const deleteButtons = document.querySelectorAll('.delete-user');
+      
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', async (e) => {
+          const userId = e.target.getAttribute('data-id');
+          
+          if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            try {
+              const response = await fetch(`/admin/users/delete/${userId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              const data = await response.json();
+              
+              if (data.success) {
+                // Reload the page to show updated user list
+                window.location.reload();
+              } else {
+                alert(data.error || 'Error deleting user');
+              }
+            } catch (error) {
+              console.error('Error:', error);
+              alert('An error occurred while trying to delete the user');
+            }
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
